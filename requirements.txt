@@ -6,5 +6,5 @@ xlrd==1.2.0
 XlsxWriter
 google-genai
 anthropic
-PyMuPDF
+pymupdf
 Pillow
