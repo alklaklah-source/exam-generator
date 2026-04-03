@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+venv/
+.venv/
+
+# Build outputs
+dist/
+build/
+*.spec
+*.egg-info/
+
+# Streamlit secrets (لا ترفع مفاتيح API!)
+.streamlit/secrets.toml
+
+# Android build outputs
+android_cloud_app/.gradle/
+android_cloud_app/app/build/
+android_native_app/.gradle/
+android_native_app/app/build/
+*.apk
+*.aab
+local.properties
+
+# Large data files (لا ترفع بنوك الأسئلة الخاصة بك)
+*.xls
+*.xlsx
+*.docx
+*.pdf
+*.zip
+
+# Windows
+Thumbs.db
+desktop.ini

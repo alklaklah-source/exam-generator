@@ -1,0 +1,10 @@
+streamlit>=1.32.0
+pandas
+openpyxl
+python-docx
+xlrd==1.2.0
+XlsxWriter
+google-genai
+anthropic
+PyMuPDF
+Pillow
