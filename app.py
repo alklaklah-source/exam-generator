@@ -400,13 +400,21 @@ def get_master_pattern_from_file(uploaded_file, limit=30):
             found_in_row = -1
             for cell in row:
                 if is_cell_highlighted(cell) and cell.value:
+                    # Strip the cell value and remove common decorators
                     txt = str(cell.value).strip()
-                    if 'أ' in txt or 'ا' in txt: found_in_row = 0
-                    elif 'ب' in txt: found_in_row = 1
-                    elif 'ج' in txt: found_in_row = 2
-                    elif 'د' in txt: found_in_row = 3
+                    for ch in [')', '(', '.', '-', '،', ',', ' ']:
+                        txt = txt.replace(ch, '')
+                    # Normalize Arabic hamza/madda variants so أ/إ/آ → ا
+                    txt_norm = txt.replace('أ', 'ا').replace('إ', 'ا').replace('آ', 'ا')
+                    # Only match EXACT single-letter cells (not full Arabic words)
+                    if txt_norm == 'ا': found_in_row = 0
+                    elif txt_norm == 'ب': found_in_row = 1
+                    elif txt_norm == 'ج': found_in_row = 2
+                    elif txt_norm == 'د': found_in_row = 3
                     if found_in_row != -1: pattern.append(found_in_row); break
-            if found_in_row == -1: pattern.append(random.randint(0,3))
+            # *** FIX: do NOT add a random entry for rows with no highlighted letter ***
+            # (previously this line caused header/empty rows to push a random index,
+            #  shifting every question to use the wrong model answer position)
         while len(pattern) < limit: pattern.append(random.randint(0,3))
         del wb
         return pattern
