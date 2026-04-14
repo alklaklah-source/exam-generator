@@ -1206,8 +1206,9 @@ with tab_exam:
 
     st.markdown("---")
 
-    st.subheader("2️⃣ رفع التمبلتات ومفاتيح الإجابة")
-    models_config = [
+    st.subheader("2️⃣ عدد النماذج المطلوبة")
+
+    ALL_MODELS_CONFIG = [
         {"name": "ا_صباحي",   "folder": "صباحي",    "key": "am1"},
         {"name": "ب_صباحي",   "folder": "صباحي",    "key": "am2"},
         {"name": "ا_مسائي",   "folder": "مسائي",    "key": "pm1"},
@@ -1215,6 +1216,22 @@ with tab_exam:
         {"name": "ا_دور_ثاني","folder": "دور_ثاني", "key": "sec1"},
         {"name": "ب_دور_ثاني","folder": "دور_ثاني", "key": "sec2"},
     ]
+
+    _nc1, _nc2 = st.columns([1, 3])
+    with _nc1:
+        num_models_choice = st.selectbox(
+            "عدد النماذج (2 – 6):",
+            options=[2, 3, 4, 5, 6],
+            index=4,          # افتراضي = 6
+            key="num_models_select"
+        )
+    with _nc2:
+        _preview_names = " | ".join(m["name"] for m in ALL_MODELS_CONFIG[:num_models_choice])
+        st.info(f"✅ النماذج التي ستُولَّد ({num_models_choice}): **{_preview_names}**")
+
+    models_config = ALL_MODELS_CONFIG[:num_models_choice]
+
+    st.subheader("3️⃣ رفع التمبلتات ومفاتيح الإجابة")
 
     _upload_c1, _upload_c2 = st.columns(2)
     with _upload_c1:
@@ -1286,7 +1303,7 @@ with tab_exam:
     st.markdown("---")
 
     # ===================== فلتر الوحدات =====================
-    st.subheader("3️⃣ تصفية الوحدات الدراسية")
+    st.subheader("4️⃣ تصفية الوحدات الدراسية")
 
     col_prev1, col_prev2 = st.columns([1, 3])
     with col_prev1:
@@ -1345,15 +1362,15 @@ with tab_exam:
     st.markdown("---")
 
     # ===================== خيارات متقدمة =====================
-    st.subheader("4️⃣ الخيارات المتقدمة")
+    st.subheader("5️⃣ الخيارات المتقدمة")
 
     col_adv1, col_adv2 = st.columns(2)
 
     with col_adv1:
         no_repeat = st.checkbox(
-            "عدم تكرار الأسئلة بين النماذج الستة",
+            f"عدم تكرار الأسئلة بين النماذج ({num_models_choice})",
             value=True,
-            help="عند التفعيل: لن يتكرر أي سؤال في أكثر من نموذج واحد. يتطلب أن يكون البنك يحتوي على ما يكفي من الأسئلة (عدد الأسئلة × 6 على الأقل)."
+            help=f"عند التفعيل: لن يتكرر أي سؤال في أكثر من نموذج واحد. يتطلب أن يكون البنك يحتوي على ما يكفي من الأسئلة (عدد الأسئلة × {num_models_choice} على الأقل)."
         )
 
     with col_adv2:
