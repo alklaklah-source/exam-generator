@@ -247,7 +247,7 @@ def _detect_format_and_cols(header_values):
         elif 'هدف' in nv: cols['obj'] = c
         elif 'صعوب' in nv or 'مستو' in nv: cols['diff'] = c
         elif 'اجاب' in nv and 'صحيح' in nv: cols['correct'] = c   # الإجابة الصحيحة
-        elif 'خطا' in nv or 'خطأ' in nv: cols['wrongs'].append(c)  # خطأ1 / خطأ2 / خطأ3
+        elif 'خطا' in nv or 'خطأ' in nv or 'خيار' in nv: cols['wrongs'].append(c)  # خطأ1/2/3 أو الخيار أ/ب/ج/د
 
     # النوع B: يوجد عمود الإجابة الصحيحة وعمود خطأ على الأقل
     fmt = 'B' if (cols['correct'] != -1 and len(cols['wrongs']) > 0) else 'A'
@@ -285,19 +285,24 @@ def _read_xls_questions(file_obj):
             diff_val = normalize_difficulty(sh.cell_value(r, cols['diff']))
 
         if fmt == 'B':
-            # الشكل الجديد: عمود الإجابة الصحيحة + أعمدة الخطأ
-            corr = str(sh.cell_value(r, cols['correct'])).strip() if cols['correct'] < sh.ncols else ""
-            wrongs = []
-            for wc in cols['wrongs']:
+            corr_raw = str(sh.cell_value(r, cols['correct'])).strip() if cols['correct'] < sh.ncols else ""
+            opts_raw = []
+            for wc in sorted(cols['wrongs']):
                 if wc < sh.ncols:
                     w = str(sh.cell_value(r, wc)).strip()
-                    if w: wrongs.append(w)
-            if not corr: continue
-            all_opts = [corr] + wrongs
-            all_opts = [x for x in all_opts if x]
-            if len(all_opts) >= 2:
-                data.append({'category': cat, 'unit': u, 'question': q,
-                             'options': all_opts[:4], 'correct_text': corr, 'difficulty': diff_val})
+                    if w: opts_raw.append(w)
+            if not corr_raw or not opts_raw: continue
+            _letter_idx = {'أ':0,'ا':0,'إ':0,'آ':0,'ب':1,'ج':2,'د':3}
+            corr_norm = corr_raw.replace('أ','ا').replace('إ','ا').replace('آ','ا').strip()
+            if corr_norm in _letter_idx and len(opts_raw) > _letter_idx[corr_norm]:
+                corr = opts_raw[_letter_idx[corr_norm]]
+                all_opts = opts_raw
+            else:
+                corr = corr_raw
+                all_opts = [corr] + opts_raw
+            if not corr or len(all_opts) < 2: continue
+            data.append({'category': cat, 'unit': u, 'question': q,
+                         'options': all_opts[:4], 'correct_text': corr, 'difficulty': diff_val})
         else:
             # الشكل القديم: الخيارات بين عمود الوحدة والسؤال
             start_opt = min(cols['u'], cols['q']) + 1
@@ -349,19 +354,29 @@ def _read_xlsx_questions(file_obj):
             diff_val = normalize_difficulty(row[cols['diff']].value)
 
         if fmt == 'B':
-            # الشكل الجديد: عمود الإجابة الصحيحة + أعمدة الخطأ
-            corr = str(row[cols['correct']].value).strip() if cols['correct'] < len(row) and row[cols['correct']].value else ""
-            wrongs = []
-            for wc in cols['wrongs']:
+            # يدعم نوعين:
+            # قديم: الإجابة الصحيحة=نص كامل + خطأ1/خطأ2/خطأ3
+            # جديد: الإجابة الصحيحة=حرف (أ/ب/ج/د) + الخيار أ/الخيار ب/الخيار ج/الخيار د
+            corr_raw = str(row[cols['correct']].value).strip() if cols['correct'] < len(row) and row[cols['correct']].value else ""
+            opts_raw = []
+            for wc in sorted(cols['wrongs']):
                 if wc < len(row) and row[wc].value:
                     w = str(row[wc].value).strip()
-                    if w: wrongs.append(w)
-            if not corr: continue
-            all_opts = [corr] + wrongs
-            all_opts = [x for x in all_opts if x]
-            if len(all_opts) >= 2:
-                data.append({'category': cat, 'unit': u, 'question': q,
-                             'options': all_opts[:4], 'correct_text': corr, 'difficulty': diff_val})
+                    if w: opts_raw.append(w)
+            if not corr_raw or not opts_raw: continue
+            _letter_idx = {'أ':0,'ا':0,'إ':0,'آ':0,'ب':1,'ج':2,'د':3}
+            corr_norm = corr_raw.replace('أ','ا').replace('إ','ا').replace('آ','ا').strip()
+            if corr_norm in _letter_idx and len(opts_raw) > _letter_idx[corr_norm]:
+                # جديد: الحرف يشير لفهرس الخيار ضمن القائمة الكاملة
+                corr = opts_raw[_letter_idx[corr_norm]]
+                all_opts = opts_raw
+            else:
+                # قديم: نص الإجابة كامل والقائمة تحتوي الإجابات الخاطئة فقط
+                corr = corr_raw
+                all_opts = [corr] + opts_raw
+            if not corr or len(all_opts) < 2: continue
+            data.append({'category': cat, 'unit': u, 'question': q,
+                         'options': all_opts[:4], 'correct_text': corr, 'difficulty': diff_val})
         else:
             # الشكل القديم: الخيارات بين عمود الوحدة والسؤال
             start_opt = min(cols['u'], cols['q']) + 1
